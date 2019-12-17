@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.7.0" />
+    <!-- workaround for VSMac bug https://github.com/mono/monodevelop/pull/5137 -->
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ExpertXamarin.html" />
+    <Compile Include="XamExpertDay.fs" />
+    <None Include="Services\Script.fsx" />
+    <Compile Include="ConferenceApp.fs" />
+    <PackageReference Include="Xamarin.Forms" Version="4.3.0.908675" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.1.0" />
+    <PackageReference Include="Fabulous.XamarinForms" Version="0.51.0" />
+    <PackageReference Include="Fabulous.XamarinForms.LiveUpdate" Version="0.51.0" />
+    <PackageReference Include="FSharp.Core" Version="4.6.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="FSharp.Data" Version="3.3.2" />
+  </ItemGroup>
+</Project>
