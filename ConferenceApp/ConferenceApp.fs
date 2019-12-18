@@ -1,7 +1,6 @@
 ﻿// Copyright 2018-2019 Fabulous contributors. See LICENSE.md for license.
 namespace ConferenceApp
 
-open System.Diagnostics
 open Fabulous
 open Fabulous.XamarinForms
 open Fabulous.XamarinForms.LiveUpdate
@@ -17,86 +16,83 @@ module App =
         Tracks: track List }
 
     type Msg = 
-        //| Increment 
-        //| Decrement 
-        //| Reset
-        //| SetStep of int
-        | TrackSelected of track option
-        //| TimedTick
+        | TrackSelected of int option
 
-    let initModel speakers tracks = { SelectedTrack=None; Speakers = speakers; Tracks = tracks }
+    let initModel speakers (tracks:track List) = { SelectedTrack=(Some tracks.[1]); Speakers = speakers; Tracks = tracks }
 
-    let loadFile name =
-            let assembly = IntrospectionExtensions.GetTypeInfo(typedefof<Model>).Assembly;
-            let stream = assembly.GetManifestResourceStream(name);
-            use streamReader = new StreamReader(stream)
-            streamReader.ReadToEnd()
+    let loadFile filename =
+        let assembly = IntrospectionExtensions.GetTypeInfo(typedefof<Model>).Assembly;
+        let stream = assembly.GetManifestResourceStream(filename);
+        use streamReader = new StreamReader(stream)
+        streamReader.ReadToEnd()
+
 
     let init () =
-        let xamExpertHtml = (loadFile "ConferenceApp.ExpertXamarin.html")
-        let speakers = (getSpeakers xamExpertHtml) |> Seq.toList
-        let tracks = (getTracks xamExpertHtml) |> Seq.toList
+        let html = loadFile("ConferenceApp.ExpertXamarin.html")
+        //let xamExpertHtml = (loadFile "ConferenceApp.ExpertXamarin.html")
+        let speakers = (getSpeakers html) |> Seq.toList
+        let tracks = (getTracks html) |> Seq.toList
+        // test code for live update desiging
+        //let speakers = [{Id = "1"; Name = "Harvey Specter"; Photo = "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fqph.fs.quoracdn.net%2Fmain-qimg-84da307035ee6477d0943dfd9fe2c7dc-c&f=1&nofb=1"; Tagline = "Senior Partner"}]
+        //let tracks = [{Room = "Room 1"; Time = "08:00 - 09:00"; Title = "Intro"; SpeakerId = None}; {Room = "Room 1"; Time = "09:00 - 10:00"; Title = "Being Awesome"; SpeakerId = Some "1"}]
         (initModel speakers tracks), Cmd.none
-
-    //let timerCmd =
-    //    async { do! Async.Sleep 200
-    //            return TimedTick }
-    //    |> Cmd.ofAsyncMsg
 
     let update msg model =
         match msg with
-        //| Increment -> { model with Count = model.Count + model.Step }, Cmd.none
-        //| Decrement -> { model with Count = model.Count - model.Step }, Cmd.none
-        //| Reset -> init ()
-        //| SetStep n -> { model with Step = n }, Cmd.none
-        | TrackSelected track -> { model with SelectedTrack = track }, Cmd.none //(if on then timerCmd else Cmd.none)
-        //| TimedTick -> 
-        //    if model.TimerOn then 
-        //        { model with Count = model.Count + model.Step }, timerCmd
-        //    else 
-        //        model, Cmd.none
+        | TrackSelected trackIndex -> match trackIndex with
+                                        | Some indx -> { model with SelectedTrack = (Some model.Tracks.[indx]) }, Cmd.none
+                                        | None -> { model with SelectedTrack = None }, Cmd.none
+    let showTrackInfo track (model:Model) dispatch =
+        let speaker = match track.SpeakerId with
+                      | Some speakerId -> model.Speakers |> Seq.tryPick(fun s -> if s.Id = speakerId then Some s else None)
+                      | None -> None
 
-    let showTrackInfo track model dispatch =
-        View.Grid (rowdefs = [Star; Auto],
+        let addSpeakerInfo (speaker:speaker) =
+            View.StackLayout(margin = Thickness(0.,32.,0.,0.), children = [
+                    View.Label (text = "Speaker", fontSize = FontSize 24. )
+                    View.Image (source = (Image.Path speaker.Photo))
+                    View.Label (text = "Presenter: " + speaker.Name)
+                    View.Label (text = "Tagline: " + speaker.Tagline)
+                ])
+            
+        let speakerViewElements = match (speaker |> Option.map addSpeakerInfo) with
+                                  | Some speakerInfo -> speakerInfo
+                                  | None -> View.Label(text = "Brought to you by the Organizers");
+
+        View.Grid (margin = Thickness(8.,8.,8.,16.),
+                    rowdefs = [Star; Auto],
                     children = [
-                        View.Label (text = track.Title)
+                        View.StackLayout(children = [
+                            View.Label (text = track.Title, fontSize = FontSize 24.)
+                            View.Label (text = "In: " + track.Room, fontSize = FontSize 14.)
+                            View.Label (text = "At: " + track.Time, fontSize = FontSize 14., margin = Thickness(0.,-4.,0.,0.))
+                            speakerViewElements
+                            ])
                         (View.Button (text = "Back", command = (fun () -> dispatch (TrackSelected None)))).Row(1)
                     ])
 
     let showTrackCell track =
-        View.Label (text = track.Title, 
-                    fontSize = FontSize 32.)
+        View.ViewCell( view =
+            View.StackLayout(children = [
+                View.Label (text = track.Title, 
+                            fontSize = FontSize 24.)
+                View.Label (text = track.Time + " in " + track.Room, 
+                            fontSize = FontSize 14.,
+                            fontAttributes = FontAttributes.Italic)
+                ]))
 
     let view (model: Model) dispatch =
-        let extractTrack (args:SelectionChangedEventArgs) =
-            let trackTitle = (((args.CurrentSelection |> Seq.head) :?> ViewElementHolder).ViewElement.Attributes |> Seq.pick(fun s -> if s.Key = "Text" then Some s else None)).Value :?> string
-        //    let track = gnabber.ViewElement.[0].Value //:?> string
-        //    //let track = gnabber.ViewElement.Title // |> Seq.head) :?> string
-            model.Tracks |> List.tryPick(fun t -> if t.Title = trackTitle then Some(t) else None)
-            //let foo = Some model.Tracks.Head
-            //foo
 
         View.ContentPage(
-          //content = View.StackLayout(padding = Thickness 20.0, verticalOptions = LayoutOptions.Center,
-            //children = [ 
-                //View.Label(text = sprintf "%d" model.Count, horizontalOptions = LayoutOptions.Center, width=200.0, horizontalTextAlignment=TextAlignment.Center)
-                //View.Button(text = "Increment", command = (fun () -> dispatch Increment), horizontalOptions = LayoutOptions.Center)
-                //View.Button(text = "Decrement", command = (fun () -> dispatch Decrement), horizontalOptions = LayoutOptions.Center)
-                //View.Label(text = "Timer", horizontalOptions = LayoutOptions.Center)
-                //View.Switch(isToggled = model.TimerOn, toggled = (fun on -> dispatch (TimerToggled on.Value)), horizontalOptions = LayoutOptions.Center)
-                //View.Slider(minimumMaximum = (0.0, 10.0), value = double model.Step, valueChanged = (fun args -> dispatch (SetStep (int (args.NewValue + 0.5)))), horizontalOptions = LayoutOptions.FillAndExpand)
-                //View.Label(text = sprintf "Step size: %d" model.Step, horizontalOptions = LayoutOptions.Center) 
-                //View.Button(text = "Reset", horizontalOptions = LayoutOptions.Center, command = (fun () -> dispatch Reset), commandCanExecute = (model <> initModel))
-            //])
             content = match model.SelectedTrack with 
                         | Some track -> showTrackInfo track model dispatch
-                        | None -> View.CollectionView(
-                                        items = (model.Tracks |> List.map showTrackCell),//(fun t -> View.Label(text = t.Title))),
-                                        selectionMode = SelectionMode.Single,
-                                        //itemTapped = (fun idx -> dispatch (TrackSelected (Some model.Tracks.[idx]))))
-                                        selectionChanged = (fun args -> dispatch (TrackSelected (extractTrack args))))
-                                        //makeListViewItemSelectedEventHandler = (fun args -> dispatch (TrackSelected args)))
-                                        //currentItemChanged = (fun args -> dispatch (TrackSelected args.Value)))
+                        | None -> View.ListView(
+                                        rowHeight = 70,
+                                        margin = Thickness(8.,0.,0.,0.),
+                                        items = (model.Tracks |> List.map showTrackCell),
+                                        selectionMode = ListViewSelectionMode.Single,
+                                        itemSelected = (fun args -> dispatch (TrackSelected args))
+                                        )
             )
 
     // Note, this declaration is needed if you enable LiveUpdate
@@ -116,7 +112,7 @@ type App () as app =
     // Uncomment this line to enable live update in debug mode. 
     // See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/tools.html#live-update for further  instructions.
     //
-    do runner.EnableLiveUpdate()
+    //do runner.EnableLiveUpdate()
 #endif    
 
     // Uncomment this code to save the application state to app.Properties using Newtonsoft.Json

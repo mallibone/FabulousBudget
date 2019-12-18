@@ -50,6 +50,6 @@ let GetSpeakerId (htmlNode:HtmlNode) =
         |> Seq.tryHead
         |> Option.flatten
 
-let tracks = expertDay.CssSelect("div.sz-session__card")
+let tracks = expertDay.Load("../ExpertXamarin.html").Html.CssSelect("div.sz-session__card")
                     |> Seq.map(fun s -> {Room = (GetRoom s); Time = (GetTime s); Title = (GetTitle s); SpeakerId = (GetSpeakerId s) })
                     

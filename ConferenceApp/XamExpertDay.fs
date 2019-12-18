@@ -3,7 +3,7 @@
 open FSharp.Data
 
 module XamExpertDay =
-    //let expertDay = HtmlDocument.Load("/Users/mallibone/Downloads/ExpertXamarin.html")
+    type expertDay = HtmlProvider<"ExpertXamarin.html">
 
     type speaker = {Id:string; Name:string; Photo:string; Tagline:string}
     type track = {Room:string; Time:string; Title:string; SpeakerId:string option}
@@ -20,10 +20,10 @@ module XamExpertDay =
     let getId (htmlNode:HtmlNode) =
         htmlNode.Attribute("data-speakerid").Value()
 
-    let getSpeakers html =
-                        let expertDay = HtmlDocument.Parse html
-                        expertDay.CssSelect("li.sz-speaker")
-                            |> Seq.map (fun s -> {Id = (getId s); Name = (getName s); Photo = (getPhoto s); Tagline = (getTagline s)})
+    let getSpeakers (html:string) =
+        HtmlDocument.Load(html)
+            .CssSelect("li.sz-speaker")
+            |> Seq.map (fun s -> {Id = (getId s); Name = (getName s); Photo = (getPhoto s); Tagline = (getTagline s)})
 
     let private getRoom (htmlNode:HtmlNode) =
         htmlNode.CssSelect("div.sz-session__room") 
@@ -50,8 +50,8 @@ module XamExpertDay =
             |> Seq.tryHead
             |> Option.flatten
 
-    let getTracks html =
-                        let expertDay = HtmlDocument.Parse html
-                        expertDay.CssSelect("div.sz-session__card")
-                        |> Seq.map(fun s -> {Room = (getRoom s); Time = (getTime s); Title = (getTitle s); SpeakerId = (getSpeakerId s) })
+    let getTracks (html:string) =
+        HtmlDocument.Load(html)
+            .CssSelect("div.sz-session__card")
+            |> Seq.map(fun s -> {Room = (getRoom s); Time = (getTime s); Title = (getTitle s); SpeakerId = (getSpeakerId s) })
 
