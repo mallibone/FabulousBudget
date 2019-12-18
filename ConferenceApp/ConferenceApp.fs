@@ -12,21 +12,19 @@ open ConferenceApp.Services.XamExpertDay
 
 module App = 
     type Model = 
-      { Count : int
-        Step : int
-        TimerOn: bool
+      { SelectedTrack: track option
         Speakers: speaker List
         Tracks: track List }
 
     type Msg = 
-        | Increment 
-        | Decrement 
-        | Reset
-        | SetStep of int
-        | TimerToggled of bool
-        | TimedTick
+        //| Increment 
+        //| Decrement 
+        //| Reset
+        //| SetStep of int
+        | TrackSelected of track option
+        //| TimedTick
 
-    let initModel speakers tracks = { Count = 0; Step = 1; TimerOn=false; Speakers = speakers; Tracks = tracks }
+    let initModel speakers tracks = { SelectedTrack=None; Speakers = speakers; Tracks = tracks }
 
     let loadFile name =
             let assembly = IntrospectionExtensions.GetTypeInfo(typedefof<Model>).Assembly;
@@ -35,30 +33,49 @@ module App =
             streamReader.ReadToEnd()
 
     let init () =
-        let xamExpertHtml = (loadFile "ExpertXamarin.html")
+        let xamExpertHtml = (loadFile "ConferenceApp.ExpertXamarin.html")
         let speakers = (getSpeakers xamExpertHtml) |> Seq.toList
         let tracks = (getTracks xamExpertHtml) |> Seq.toList
         (initModel speakers tracks), Cmd.none
 
-    let timerCmd =
-        async { do! Async.Sleep 200
-                return TimedTick }
-        |> Cmd.ofAsyncMsg
+    //let timerCmd =
+    //    async { do! Async.Sleep 200
+    //            return TimedTick }
+    //    |> Cmd.ofAsyncMsg
 
     let update msg model =
         match msg with
-        | Increment -> { model with Count = model.Count + model.Step }, Cmd.none
-        | Decrement -> { model with Count = model.Count - model.Step }, Cmd.none
-        | Reset -> init ()
-        | SetStep n -> { model with Step = n }, Cmd.none
-        | TimerToggled on -> { model with TimerOn = on }, (if on then timerCmd else Cmd.none)
-        | TimedTick -> 
-            if model.TimerOn then 
-                { model with Count = model.Count + model.Step }, timerCmd
-            else 
-                model, Cmd.none
+        //| Increment -> { model with Count = model.Count + model.Step }, Cmd.none
+        //| Decrement -> { model with Count = model.Count - model.Step }, Cmd.none
+        //| Reset -> init ()
+        //| SetStep n -> { model with Step = n }, Cmd.none
+        | TrackSelected track -> { model with SelectedTrack = track }, Cmd.none //(if on then timerCmd else Cmd.none)
+        //| TimedTick -> 
+        //    if model.TimerOn then 
+        //        { model with Count = model.Count + model.Step }, timerCmd
+        //    else 
+        //        model, Cmd.none
+
+    let showTrackInfo track model dispatch =
+        View.Grid (rowdefs = [Star; Auto],
+                    children = [
+                        View.Label (text = track.Title)
+                        (View.Button (text = "Back", command = (fun () -> dispatch (TrackSelected None)))).Row(1)
+                    ])
+
+    let showTrackCell track =
+        View.Label (text = track.Title, 
+                    fontSize = FontSize 32.)
 
     let view (model: Model) dispatch =
+        let extractTrack (args:SelectionChangedEventArgs) =
+            let trackTitle = (((args.CurrentSelection |> Seq.head) :?> ViewElementHolder).ViewElement.Attributes |> Seq.pick(fun s -> if s.Key = "Text" then Some s else None)).Value :?> string
+        //    let track = gnabber.ViewElement.[0].Value //:?> string
+        //    //let track = gnabber.ViewElement.Title // |> Seq.head) :?> string
+            model.Tracks |> List.tryPick(fun t -> if t.Title = trackTitle then Some(t) else None)
+            //let foo = Some model.Tracks.Head
+            //foo
+
         View.ContentPage(
           //content = View.StackLayout(padding = Thickness 20.0, verticalOptions = LayoutOptions.Center,
             //children = [ 
@@ -71,7 +88,15 @@ module App =
                 //View.Label(text = sprintf "Step size: %d" model.Step, horizontalOptions = LayoutOptions.Center) 
                 //View.Button(text = "Reset", horizontalOptions = LayoutOptions.Center, command = (fun () -> dispatch Reset), commandCanExecute = (model <> initModel))
             //])
-            content = View.CollectionView(items = (model.Tracks |> List.map (fun t -> View.Label(text = t.Title))))
+            content = match model.SelectedTrack with 
+                        | Some track -> showTrackInfo track model dispatch
+                        | None -> View.CollectionView(
+                                        items = (model.Tracks |> List.map showTrackCell),//(fun t -> View.Label(text = t.Title))),
+                                        selectionMode = SelectionMode.Single,
+                                        //itemTapped = (fun idx -> dispatch (TrackSelected (Some model.Tracks.[idx]))))
+                                        selectionChanged = (fun args -> dispatch (TrackSelected (extractTrack args))))
+                                        //makeListViewItemSelectedEventHandler = (fun args -> dispatch (TrackSelected args)))
+                                        //currentItemChanged = (fun args -> dispatch (TrackSelected args.Value)))
             )
 
     // Note, this declaration is needed if you enable LiveUpdate
@@ -91,7 +116,7 @@ type App () as app =
     // Uncomment this line to enable live update in debug mode. 
     // See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/tools.html#live-update for further  instructions.
     //
-    //do runner.EnableLiveUpdate()
+    do runner.EnableLiveUpdate()
 #endif    
 
     // Uncomment this code to save the application state to app.Properties using Newtonsoft.Json

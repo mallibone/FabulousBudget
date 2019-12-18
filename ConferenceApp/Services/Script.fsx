@@ -1,7 +1,8 @@
-﻿#r @"/Users/mallibone/Work/Playground/ConferenceApp/packages/FSharp.Data.3.3.2/lib/net45/FSharp.Data.dll"
+﻿#r @"../../packages/FSharp.Data.3.3.2/lib/net45/FSharp.Data.dll"
 open FSharp.Data
 
-let expertDay = HtmlDocument.Load("/Users/mallibone/Downloads/ExpertXamarin.html")
+//let expertDay = HtmlDocument.Load("/Users/mallibone/Downloads/ExpertXamarin.html")
+type expertDay = HtmlProvider<"../ExpertXamarin.html">
 
 type speaker = {Id:string; Name:string; Photo:string; Tagline:string}
 type track = {Room:string; Time:string; Title:string; SpeakerId:string option}
@@ -18,7 +19,8 @@ let GetTagline (htmlNode:HtmlNode) =
 let GetId (htmlNode:HtmlNode) =
     htmlNode.Attribute("data-speakerid").Value()
 
-let speakers = expertDay.CssSelect("li.sz-speaker")
+//let speakers = expertDay.CssSelect("li.sz-speaker")
+let speakers = expertDay.Load("../ExpertXamarin.html").Html.CssSelect("li.sz-speaker")
                                 |> Seq.map (fun s -> {Id = (GetId s); Name = (GetName s); Photo = (GetPhoto s); Tagline = (GetTagline s)})
 
 
