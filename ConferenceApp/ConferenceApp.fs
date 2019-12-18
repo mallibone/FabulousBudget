@@ -18,7 +18,7 @@ module App =
     type Msg = 
         | TrackSelected of int option
 
-    let initModel speakers (tracks:track List) = { SelectedTrack=(Some tracks.[1]); Speakers = speakers; Tracks = tracks }
+    let initModel speakers (tracks:track List) = { SelectedTrack = None; Speakers = speakers; Tracks = tracks }
 
     let loadFile filename =
         let assembly = IntrospectionExtensions.GetTypeInfo(typedefof<Model>).Assembly;
@@ -49,7 +49,7 @@ module App =
 
         let addSpeakerInfo (speaker:speaker) =
             View.StackLayout(margin = Thickness(0.,32.,0.,0.), children = [
-                    View.Label (text = "Speaker", fontSize = FontSize 24. )
+                    View.Label (text = "Speaker", fontSize = FontSize 22. )
                     View.Image (source = (Image.Path speaker.Photo))
                     View.Label (text = "Presenter: " + speaker.Name)
                     View.Label (text = "Tagline: " + speaker.Tagline)
@@ -63,7 +63,7 @@ module App =
                     rowdefs = [Star; Auto],
                     children = [
                         View.StackLayout(children = [
-                            View.Label (text = track.Title, fontSize = FontSize 24.)
+                            View.Label (text = track.Title, fontSize = FontSize 22.)
                             View.Label (text = "In: " + track.Room, fontSize = FontSize 14.)
                             View.Label (text = "At: " + track.Time, fontSize = FontSize 14., margin = Thickness(0.,-4.,0.,0.))
                             speakerViewElements
@@ -75,7 +75,7 @@ module App =
         View.ViewCell( view =
             View.StackLayout(children = [
                 View.Label (text = track.Title, 
-                            fontSize = FontSize 24.)
+                            fontSize = FontSize 22.)
                 View.Label (text = track.Time + " in " + track.Room, 
                             fontSize = FontSize 14.,
                             fontAttributes = FontAttributes.Italic)
@@ -87,7 +87,8 @@ module App =
             content = match model.SelectedTrack with 
                         | Some track -> showTrackInfo track model dispatch
                         | None -> View.ListView(
-                                        rowHeight = 70,
+                                        rowHeight = 80,
+                                        hasUnevenRows = true,
                                         margin = Thickness(8.,0.,0.,0.),
                                         items = (model.Tracks |> List.map showTrackCell),
                                         selectionMode = ListViewSelectionMode.Single,

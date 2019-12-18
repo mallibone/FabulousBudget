@@ -21,7 +21,7 @@ module XamExpertDay =
         htmlNode.Attribute("data-speakerid").Value()
 
     let getSpeakers (html:string) =
-        HtmlDocument.Load(html)
+        HtmlDocument.Parse(html)
             .CssSelect("li.sz-speaker")
             |> Seq.map (fun s -> {Id = (getId s); Name = (getName s); Photo = (getPhoto s); Tagline = (getTagline s)})
 
@@ -51,7 +51,7 @@ module XamExpertDay =
             |> Option.flatten
 
     let getTracks (html:string) =
-        HtmlDocument.Load(html)
+        HtmlDocument.Parse(html)
             .CssSelect("div.sz-session__card")
             |> Seq.map(fun s -> {Room = (getRoom s); Time = (getTime s); Title = (getTitle s); SpeakerId = (getSpeakerId s) })
 
