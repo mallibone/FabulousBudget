@@ -42,6 +42,7 @@ module App =
         | TrackSelected trackIndex -> match trackIndex with
                                         | Some indx -> { model with SelectedTrack = (Some model.Tracks.[indx]) }, Cmd.none
                                         | None -> { model with SelectedTrack = None }, Cmd.none
+
     let showTrackInfo track (model:Model) dispatch =
         let speaker = match track.SpeakerId with
                       | Some speakerId -> model.Speakers |> Seq.tryPick(fun s -> if s.Id = speakerId then Some s else None)
