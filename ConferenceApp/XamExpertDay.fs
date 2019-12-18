@@ -3,22 +3,22 @@
 open FSharp.Data
 
 module XamExpertDay =
-    type expertDay = HtmlProvider<"ExpertXamarin.html">
+    // type expertDay = HtmlProvider<"ExpertXamarin.html">
 
-    type speaker = {Id:string; Name:string; Photo:string; Tagline:string}
-    type track = {Room:string; Time:string; Title:string; SpeakerId:string option}
+    type Speaker = {Id:string; Name:string; Photo:string; Tagline:string}
+    type Track = {Room:string; Time:string; Title:string; SpeakerId:string option}
 
-    let getName (htmlNode:HtmlNode) =
-        htmlNode.CssSelect("h3.sz-speaker__name > a") |> Seq.map (fun h -> h.DirectInnerText()) |> Seq.head
-
-    let getPhoto (htmlNode:HtmlNode) =
+    let private getPhoto (htmlNode:HtmlNode) =
         htmlNode.Descendants["img"] |> Seq.map (fun h -> h.AttributeValue("src")) |> Seq.head
 
-    let getTagline (htmlNode:HtmlNode) =
+    let private getTagline (htmlNode:HtmlNode) =
         htmlNode.CssSelect("h4.sz-speaker__tagline") |> Seq.map (fun h -> h.DirectInnerText()) |> Seq.head
 
-    let getId (htmlNode:HtmlNode) =
+    let private getId (htmlNode:HtmlNode) =
         htmlNode.Attribute("data-speakerid").Value()
+
+    let private getName (htmlNode:HtmlNode) =
+        htmlNode.CssSelect("h3.sz-speaker__name > a") |> Seq.map (fun h -> h.DirectInnerText()) |> Seq.head
 
     let getSpeakers (html:string) =
         HtmlDocument.Parse(html)

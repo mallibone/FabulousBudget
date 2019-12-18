@@ -11,14 +11,14 @@ open ConferenceApp.Services.XamExpertDay
 
 module App = 
     type Model = 
-      { SelectedTrack: track option
-        Speakers: speaker List
-        Tracks: track List }
+      { SelectedTrack: Track option
+        Speakers: Speaker List
+        Tracks: Track List }
 
     type Msg = 
         | TrackSelected of int option
 
-    let initModel speakers (tracks:track List) = { SelectedTrack = None; Speakers = speakers; Tracks = tracks }
+    let initModel speakers (tracks:Track List) = { SelectedTrack = None; Speakers = speakers; Tracks = tracks }
 
     let loadFile filename =
         let assembly = IntrospectionExtensions.GetTypeInfo(typedefof<Model>).Assembly;
@@ -47,7 +47,7 @@ module App =
                       | Some speakerId -> model.Speakers |> Seq.tryPick(fun s -> if s.Id = speakerId then Some s else None)
                       | None -> None
 
-        let addSpeakerInfo (speaker:speaker) =
+        let addSpeakerInfo (speaker:Speaker) =
             View.StackLayout(margin = Thickness(0.,32.,0.,0.), children = [
                     View.Label (text = "Speaker", fontSize = FontSize 22. )
                     View.Image (source = (Image.Path speaker.Photo))
